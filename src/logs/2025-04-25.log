@@ -1,0 +1,17 @@
+
+Request: POST /api/v1/admin/auth/login headers[content-type=application/json;user-agent=PostmanRuntime/7.43.3;accept=*/*;cache-control=no-cache;postman-token=84432126-c134-426f-a62b-deb51ad49ee8;host=localhost:7002;accept-encoding=gzip, deflate, br;connection=keep-alive;content-length=67;cookie=refreshToken=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiNjI0ZjdlY2EtMDNlOS00ZGUxLTk2YmUtMzFkODBmZDcwZDIyIiwicm9sZV9uYW1lIjoiQWRtaW4iLCJpYXQiOjE3NDU1NTkzMDcsImV4cCI6MTc3NzA5NTMwN30.V75WJnxrO7uoRpO1ecV8gso7yBtoUYm431TYktNWRPQ] at Fri Apr 25 2025 11:05:20 GMT+0530, IP: ::1, User Agent: PostmanRuntime/7.43.3
+Request Body:
+{
+	"email": "admin1@gmail.com",
+	"password": "admin123456"
+}
+Response Body:
+{
+	"status": 200,
+	"responseCode": 1,
+	"success": true,
+	"message": "success",
+	"data": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiNjI0ZjdlY2EtMDNlOS00ZGUxLTk2YmUtMzFkODBmZDcwZDIyIiwicm9sZV9uYW1lIjoiQWRtaW4iLCJpYXQiOjE3NDU1NTkzMjAsImV4cCI6MTc0NTU1OTYyMH0.j_3WGU09xUu-x2onnuuTNqUr-JUtG_8MEr6A9TaCWEk",
+	"error": null
+}
+Response: 200 125.903 ms 

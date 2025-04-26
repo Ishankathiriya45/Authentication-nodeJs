@@ -1,6 +1,6 @@
 const express = require('express');
 const { AdminModule } = require('../../../controller/v1');
-const { validateSchema } = require('../../../middleware');
+const { validateSchema, tokenAuth } = require('../../../middleware');
 const { AuthValidator } = require('../../../validation');
 const router = express()
 
@@ -18,6 +18,14 @@ router.post('/login',
     validateSchema(AuthValidator.adminAuthValidate.login),
     async (req, res) => {
         const result = await AuthCtr1.login(req, res)
+        // return res.status(result.status).send(result)
+        return result;
+    }
+)
+
+router.post('/refresh-token',
+    async (req, res) => {
+        const result = await AuthCtr1.refreshToken(req, res)
         return res.status(result.status).send(result)
     }
 )

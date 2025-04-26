@@ -4,6 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const Sequelize = require('sequelize');
 const process = require('process');
+const clc = require('cli-color');
 const basename = path.basename(__filename);
 const env = process.env.NODE_ENV || 'development';
 const config = require('../config/config')[env];
@@ -17,9 +18,9 @@ if (config.use_env_variable) {
 }
 
 sequelize.authenticate().then(() => {
-  console.log(`connection success DB:${config.database}`)
-}).catch(() => {
-  console.log(`connection failed...`)
+  console.log(clc.green.underline(`connection success`), clc.yellow.underline(`DB_NAME::${config.database}`))
+}).catch((error) => {
+  console.log(`connection failed...`, error.message)
 })
 
 fs

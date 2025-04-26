@@ -2,10 +2,11 @@ const jwt = require('jsonwebtoken');
 const { permission } = require('../utils/constant');
 const { CommonUtil } = require('../utils');
 const { messages } = require('../constants');
-const { serverError, badRequest, failAuthorization, validationError } = require('../responses/response');
+const { serverError, badRequest, failAuthorization, validationError, forbidden } = require('../responses/response');
 const { UserService } = require('../service');
 const cryptoUtil = require('../utils/crypto.util');
-const secrateKey = process.env['SECRATE_KEY_' + process.env.RUN_MODE]
+const accessSecrateKey = process.env['ACCESS_TOKEN_KEY_' + process.env.RUN_MODE]
+const refreshSecreteKey = process.env['REFRESH_TOKEN_KEY_' + process.env.RUN_MODE]
 const userService = new UserService();
 
 const bearerToken = async (req, res) => {
@@ -30,10 +31,12 @@ const bearerToken = async (req, res) => {
     }
 
     try {
-        const decoded = jwt.verify(token, secrateKey)
-        req.headers.tokenpayload = decoded;
-        return {
-            valid: true
+        if (token) {
+            const decoded = jwt.verify(token, accessSecrateKey)
+            req.headers.tokenpayload = decoded;
+            return {
+                valid: true,
+            }
         }
     } catch (error) {
         return {
@@ -61,6 +64,7 @@ const checkRequest = async (req, res) => {
     const encryptionMsg = process.env['ENCRYPTION_MESSAGE_' + process.env.RUN_MODE];
 
     requestText == encryptionMsg;
+
     return true;
 }
 
@@ -69,6 +73,7 @@ const checkAuth = async (req, res, next, role) => {
         const checkBearerToken = await bearerToken(req, res)
 
         if ((await checkRequest(req, res) == true) || checkBearerToken.valid == true) {
+
             const { tokenpayload: { user_id, role_name } } = req.headers;
 
             if (!role.includes(role_name)) {
@@ -82,7 +87,7 @@ const checkAuth = async (req, res, next, role) => {
             }
             next()
         } else {
-            return res.status(401).send(failAuthorization(
+            return res.status(403).send(forbidden(0,
                 checkBearerToken.message ? checkBearerToken.message : messages.invalidToken,
                 null,
                 {},
@@ -97,19 +102,23 @@ const bikeAuth = async (req, res, next) => {
     return checkAuth(req, res, next, ['Admin']);
 }
 
-const validateSchema = (schema, fileKey)=>{
-    return(req, res, next)=>{
-        const validationData = {...req.body};
-        
-        if(fileKey){
-            validationData[fileKey] = req.file? req.file:req.files;
+const tokenAuth = async (req, res, next) => {
+    return checkAuth(req, res, next, ['Admin']);
+}
+
+const validateSchema = (schema, fileKey) => {
+    return (req, res, next) => {
+        const validationData = { ...req.body };
+
+        if (fileKey) {
+            validationData[fileKey] = req.file ? req.file : req.files;
         }
 
-        const {error} = schema.validate(validationData)
-        if(!error){
+        const { error } = schema.validate(validationData)
+        if (!error) {
             next()
-        }else{
-            const message = error?.details.map((detail)=> detail.message).join(',')
+        } else {
+            const message = error?.details.map((detail) => detail.message).join(',')
             res.status(422).send(validationError(0, message, null))
         }
     }
@@ -119,6 +128,7 @@ module.exports = {
     bearerToken,
     checkAuth,
     bikeAuth,
+    tokenAuth,
     checkRequest,
     validateSchema,
 }
