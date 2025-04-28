@@ -94,7 +94,7 @@ class AuthController {
                     secure: true,       // Use true in production with HTTPS
                     sameSite: 'Strict', // Adjust for cross-site
                     maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-                }).status(200).send({ status: 200, responseCode: 1, success: true, message:'success', data, error: null })
+                }).status(200).send({ status: 200, responseCode: 1, success: true, message: 'success', data, error: null })
             }
         } catch (error) {
             return serverError(0, messages.internalServerError, error.message)
@@ -102,7 +102,7 @@ class AuthController {
     }
 
     async refreshToken(req, res) {
-        
+
         const token = req.cookies.refreshToken;
 
         if (!token) {
