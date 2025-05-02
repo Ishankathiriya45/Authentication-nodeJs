@@ -13,7 +13,7 @@ const mailForgot = async (mailData) => {
         from: process.env['EMAIL_USERNAME_' + process.env.RUN_MODE],
         to: mailData.email,
         subject: mailData.subject,
-        text: `http://localhoat:7002/api/v1/admin/auth/reset-password/${mailData.token}`
+        text: `forgot-password token::${mailData.token}`
     }
 
     const otpResponse = await transpoter.sendMail(mailOptions).then((data) => {
