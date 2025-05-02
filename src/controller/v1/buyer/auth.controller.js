@@ -3,6 +3,7 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const { successResponse, serverError } = require("../../../responses/response");
 const { messages } = require("../../../constants");
+const { responseMsg } = require("../../../responses");
 const secrateKey = process.env['ACCESS_TOKEN_KEY_' + process.env.RUN_MODE]
 const UserModel = db.User;
 const RoleModel = db.Role;
@@ -45,10 +46,10 @@ class AuthController {
 
                 let token = jwt.sign(tokenDetail, secrateKey, { expiresIn: '1d' })
 
-                return successResponse(1, 'Registration successfully', token)
+                return responseMsg.successResponse(1, 'Registration successfully', token)
             }
         } catch (error) {
-            return serverError(0, messages.internalServerError, error.message)
+            return responseMsg.serverError(0, messages.internalServerError, error.message)
         }
     }
 }

@@ -9,7 +9,7 @@ const accessSecrateKey = process.env['ACCESS_TOKEN_KEY_' + process.env.RUN_MODE]
 const refreshSecreteKey = process.env['REFRESH_TOKEN_KEY_' + process.env.RUN_MODE]
 const userService = new UserService();
 
-const bearerToken = async (req, res) => {
+const bearerToken = async (req) => {
     const { authorization } = req.headers;
 
     if (CommonUtil.isEmpty(authorization)) {
@@ -46,7 +46,7 @@ const bearerToken = async (req, res) => {
     }
 }
 
-const checkRequest = async (req, res) => {
+const checkRequest = async (req) => {
     const { requesttoken } = req.headers;
 
     if (!requesttoken) {
@@ -70,9 +70,9 @@ const checkRequest = async (req, res) => {
 
 const checkAuth = async (req, res, next, role) => {
     try {
-        const checkBearerToken = await bearerToken(req, res)
+        const checkBearerToken = await bearerToken(req)
 
-        if ((await checkRequest(req, res) == true) || checkBearerToken.valid == true) {
+        if ((await checkRequest(req) == true) || checkBearerToken.valid == true) {
 
             const { tokenpayload: { user_id, role_name } } = req.headers;
 

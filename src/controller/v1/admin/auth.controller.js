@@ -1,14 +1,20 @@
 const db = require('../../../models');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const { successResponse, serverError, failAuthorization, forbidden, notFound } = require('../../../responses/response');
 const { messages } = require('../../../constants');
 const { where } = require('sequelize');
+const { generateOtp } = require('../../../helper/common');
+const { mailSend } = require('../../../service/mail.service');
+const { responseMsg } = require('../../../responses');
+const Crypto = require('crypto');
+const { mailForgot } = require('../../../service/forgot-password.service');
 const accessSecrateKey = process.env['ACCESS_TOKEN_KEY_' + process.env.RUN_MODE]
 const refreshSecreteKey = process.env['REFRESH_TOKEN_KEY_' + process.env.RUN_MODE]
 const UserModel = db.User;
 const RoleModel = db.Role;
 const UserRoleModel = db.UserRole;
+const OtpModel = db.Otp;
+const ResetTokenModel = db.ResetToken;
 
 class AuthController {
     constructor() { }
@@ -47,10 +53,10 @@ class AuthController {
 
                 let token = jwt.sign(tokenDetail, accessSecrateKey, { expiresIn: '1d' })
 
-                return successResponse(1, 'Registration successfully', token)
+                return responseMsg.successResponse(1, 'Registration successfully', token)
             }
         } catch (error) {
-            return serverError(0, messages.internalServerError, error.message)
+            return responseMsg.serverError(0, messages.internalServerError, error.message)
         }
     }
 
@@ -63,10 +69,11 @@ class AuthController {
                     email: email,
                 }
             })
-
             const confirePassword = await bcrypt.compare(password, getUser.password)
 
             let whereCluse = {};
+
+            // this.sendOtp(getUser.email)
 
             if (getUser && confirePassword) {
                 whereCluse.email = getUser.email;
@@ -95,9 +102,11 @@ class AuthController {
                     sameSite: 'Strict', // Adjust for cross-site
                     maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
                 }).status(200).send({ status: 200, responseCode: 1, success: true, message: 'success', data, error: null })
+            } else {
+                return res.status(422).send(responseMsg.validationError(0, "Invalid email and password"))
             }
         } catch (error) {
-            return serverError(0, messages.internalServerError, error.message)
+            return res.status(500).send(responseMsg.serverError(0, messages.internalServerError, error.message))
         }
     }
 
@@ -106,7 +115,7 @@ class AuthController {
         const token = req.cookies.refreshToken;
 
         if (!token) {
-            return serverError(0, 'No token')
+            return responseMsg.serverError(0, 'No token')
         }
 
         const payload = jwt.verify(token, refreshSecreteKey)
@@ -134,7 +143,126 @@ class AuthController {
         }
 
         const newAccessToken = jwt.sign(tokenData, accessSecrateKey, { expiresIn: '15m' })
-        return successResponse(1, 'Success', newAccessToken)
+        return responseMsg.successResponse(1, 'Success', newAccessToken)
+    }
+
+    async sendOtp(email) {
+        try {
+            let { email } = req.body;
+
+            let getEmail = await UserModel.findOne({
+                where: {
+                    email: email,
+                }
+            })
+
+            if (!getEmail) {
+                return responseMsg.validationError(0, "User not found")
+            }
+
+            let otp = generateOtp()
+
+            let otpData = {
+                email: email,
+                otp: otp,
+            }
+
+            let otpDetail = await OtpModel.create(otpData)
+
+            if (otpDetail) {
+                let mailData = {
+                    email: otpDetail.email,
+                    subject: 'OTP authenticate',
+                    template: "authenticate",
+                    emailData: {
+                        otp: otpDetail.otp,
+                    }
+                }
+
+                let otpResponse = await mailSend(mailData)
+
+                if (otpResponse) {
+                    return responseMsg.successResponse(1, "Success", otpResponse)
+                } else {
+                    return responseMsg.validationError(0, "No otp data")
+                }
+            }
+        } catch (error) {
+            return responseMsg.serverError(0, "Something went wrong", error.message)
+        }
+    }
+
+    async forgotPassword(req) {
+        try {
+            const { email } = req.body;
+
+            let getUser = await UserModel.findOne({
+                where: {
+                    email: email,
+                }
+            })
+
+            if (!getUser) {
+                return responseMsg.validationError(0, "User not found")
+            }
+
+            let token = Crypto.randomBytes(32).toString("hex")
+
+            let resetTokenData = {
+                email: email,
+                token: token,
+            }
+
+            let detail = await ResetTokenModel.create(resetTokenData)
+
+            if (detail) {
+                let passwordDetail = {
+                    email: detail.email,
+                    token: detail.token,
+                    subject: 'Reset your password',
+                }
+
+                let passwordResponse = await mailForgot(passwordDetail)
+
+                if (passwordResponse) {
+                    return responseMsg.successResponse(1, "Success", passwordResponse)
+                } else {
+                    return responseMsg.validationError(0, "Failed")
+                }
+            }
+        } catch (error) {
+            return responseMsg.serverError(0, "Something went wrong", error.message)
+        }
+    }
+
+    async resetPassword(req) {
+        const { token } = req.params;
+        const { password } = req.body;
+
+        let getToken = await ResetTokenModel.findOne({
+            where: {
+                token: token,
+            }
+        })
+
+        if (!getToken) {
+            return responseMsg.validationError(0, "Invalid or expired token")
+        }
+
+        let newHashPassword = await bcrypt.hash(password, 10)
+
+        await UserModel.update(
+            { password: newHashPassword },
+            { where: { email: getToken.email } }
+        )
+
+        await ResetTokenModel.destroy({
+            where: {
+                token: token,
+            }
+        })
+
+        return responseMsg.successResponse(1, "Password reset successfully")
     }
 }
 

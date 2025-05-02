@@ -30,4 +30,25 @@ router.post('/refresh-token',
     }
 )
 
+router.post('/send-otp',
+    async (req, res) => {
+        const result = await AuthCtr1.sendOtp(req, res)
+        return res.status(result.status).send(result)
+    }
+)
+
+router.post('/forgot-password',
+    async (req, res) => {
+        const result = await AuthCtr1.forgotPassword(req, res)
+        return res.status(result.status).send(result)
+    }
+)
+
+router.post('/reset-password/:token',
+    async (req, res) => {
+        const result = await AuthCtr1.resetPassword(req, res)
+        return res.status(result.status).send(result)
+    }
+)
+
 module.exports = router;

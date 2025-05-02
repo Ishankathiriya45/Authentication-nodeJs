@@ -1,5 +1,6 @@
 const { messages } = require("../../../constants");
 const db = require("../../../models");
+const { responseMsg } = require("../../../responses");
 const { successResponse, serverError, badRequest } = require("../../../responses/response");
 const { createMessage, getMessage } = require("../../../utils/common.util");
 const BikeModel = db.Bike;
@@ -12,16 +13,16 @@ class BikeController {
             const detail = await BikeModel.findAll()
 
             if (detail) {
-                return successResponse(
+                return responseMsg.successResponse(
                     0,
                     getMessage('Lottery'),
                     detail,
                 )
             } else {
-                return badRequest(messages.noData)
+                return responseMsg.badRequest(messages.noData)
             }
         } catch (error) {
-            return serverError(0, messages.internalServerError, error.message)
+            return responseMsg.serverError(0, messages.internalServerError, error.message)
         }
     }
 
@@ -45,16 +46,16 @@ class BikeController {
             const detail = await BikeModel.create(bikeData)
 
             if (detail) {
-                return successResponse(
+                return responseMsg.successResponse(
                     0,
                     createMessage('Lottery'),
                     detail,
                 )
             } else {
-                return badRequest(messages.noData)
+                return responseMsg.badRequest(messages.noData)
             }
         } catch (error) {
-            return serverError(0, messages.internalServerError, error.message)
+            return responseMsg.serverError(0, messages.internalServerError, error.message)
         }
     }
 }
