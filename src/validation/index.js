@@ -1,4 +1,4 @@
 module.exports = {
-    AuthValidator: require('./auth.validate'),
-    BikeValidator: require('./bike.validate'),
-}
+  AuthValidator: require("./auth.validate"),
+  BikeValidator: require("./bike.validate"),
+};

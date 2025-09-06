@@ -1,5 +1,5 @@
-const isEmpty = (value)=>{
-    if (value === undefined) return true;
+const isEmpty = (value) => {
+  if (value === undefined) return true;
 
   if (value === null || value.length === 0) return true;
 
@@ -22,16 +22,16 @@ const isEmpty = (value)=>{
       return true;
     }
   }
-}
+};
 
 module.exports = {
-    isEmpty,
+  isEmpty,
 
-    createMessage: (name)=>{
-        return `${name} was created successfully`;
-    },
+  createMessage: (name) => {
+    return `${name} was created successfully`;
+  },
 
-    getMessage: (name)=>{
-        return `${name} was get successfully`;
-    }
-}
+  getMessage: (name) => {
+    return `${name} was get successfully`;
+  },
+};

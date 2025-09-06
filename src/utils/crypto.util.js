@@ -1,8 +1,8 @@
-const crypto = require('node:crypto')
-const { Buffer } = require('node:buffer')
+const crypto = require("node:crypto");
+const { Buffer } = require("node:buffer");
 
-const password = process.env['ENCRYPTION_SECRET_KEY_' + process.env.RUN_MODE]
-const algorithm = process.env['ENCRYPTION_ALGORITHM_' + process.env.RUN_MODE]
+const password = process.env["ENCRYPTION_SECRET_KEY_" + process.env.RUN_MODE];
+const algorithm = process.env["ENCRYPTION_ALGORITHM_" + process.env.RUN_MODE];
 const key = crypto.scryptSync(password, "salt", 32);
 const iv = Buffer.alloc(16, 0);
 
@@ -24,4 +24,4 @@ module.exports = {
       return null;
     }
   },
-}
+};

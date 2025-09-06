@@ -1,7 +1,5 @@
-'use strict';
-const {
-  Model
-} = require('sequelize');
+"use strict";
+const { Model } = require("sequelize");
 module.exports = (sequelize, DataTypes) => {
   class ResetToken extends Model {
     /**
@@ -13,20 +11,23 @@ module.exports = (sequelize, DataTypes) => {
       // define association here
     }
   }
-  ResetToken.init({
-    reset_token_id: {
-      type: DataTypes.UUID,
-      defaultValue: DataTypes.UUIDV4,
-      primaryKey: true,
-      allowNull: false,
+  ResetToken.init(
+    {
+      reset_token_id: {
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUIDV4,
+        primaryKey: true,
+        allowNull: false,
+      },
+      email: DataTypes.STRING,
+      token: DataTypes.STRING,
     },
-    email: DataTypes.STRING,
-    token: DataTypes.STRING
-  }, {
-    timestamps: true,
-    sequelize,
-    modelName: 'ResetToken',
-    tableName: 'resettoken',
-  });
+    {
+      timestamps: true,
+      sequelize,
+      modelName: "ResetToken",
+      tableName: "resettoken",
+    }
+  );
   return ResetToken;
 };
