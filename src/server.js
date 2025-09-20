@@ -8,6 +8,7 @@ const cors = require("cors");
 const { rateLimit } = require("express-rate-limit");
 const morgan = require("morgan-body");
 const moment = require("moment");
+const clc = require("cli-color");
 require("dotenv").config();
 
 app.use(cors());
@@ -56,6 +57,6 @@ app.use("/api", require("./router"));
 let port = process.env["PORT_" + process.env.RUN_MODE];
 app.listen(port, () => {
   console.log(
-    `server is running on ${port} and environment ${process.env.RUN_MODE}`
+    `server is running on ${clc.green.underline(port)} and environment ${process.env.RUN_MODE}`
   );
 });

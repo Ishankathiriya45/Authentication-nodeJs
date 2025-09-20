@@ -1,6 +1,6 @@
 const express = require("express");
 const { AdminModule } = require("../../../controller/v1");
-const { validateSchema, tokenAuth } = require("../../../middleware");
+const { validateSchema, checkRequestToken } = require("../../../middleware");
 const { AuthValidator } = require("../../../validation");
 const router = express();
 
@@ -30,7 +30,7 @@ router.post("/refresh-token", async (req, res) => {
   return res.status(result.status).send(result);
 });
 
-router.post("/send-otp", async (req, res) => {
+router.post("/send-otp", checkRequestToken, async (req, res) => {
   const result = await AuthCtr1.sendOtp(req, res);
   return res.status(result.status).send(result);
 });

@@ -6,6 +6,11 @@ const { where } = require("sequelize");
 const { generateOtp } = require("../../../helper/common");
 const { mailSend } = require("../../../service/mail.service");
 const { responseMsg } = require("../../../responses");
+const eventHandler = require("../../../handler/event.handler");
+const {
+  CommonUtil: { getDynamicContent },
+  DateUtil: { getEpochFromDate },
+} = require("../../../utils");
 const Crypto = require("crypto");
 const { mailForgot } = require("../../../service/forgot-password.service");
 const accessSecrateKey =
@@ -181,9 +186,9 @@ class AuthController {
     return responseMsg.successResponse(1, "Success", newAccessToken);
   }
 
-  async sendOtp(email) {
+  async sendOtp(req) {
     try {
-      let { email } = req.body;
+      let { email, type, isMailUpdate = true } = req.body;
 
       let getEmail = await UserModel.findOne({
         where: {
@@ -192,36 +197,45 @@ class AuthController {
       });
 
       if (!getEmail) {
-        return responseMsg.validationError(0, "User not found");
+        return responseMsg.notFound(0, "User not found");
       }
 
       let otp = generateOtp();
 
       let otpData = {
-        email: email,
-        otp: otp,
+        USER_NAME: getEmail.name,
+        OTP: otp,
       };
 
-      let otpDetail = await OtpModel.create(otpData);
+      await OtpModel.create({
+        email,
+        otp,
+        otp_send_date: getEpochFromDate(new Date()),
+      });
 
-      if (otpDetail) {
-        let mailData = {
-          email: otpDetail.email,
-          subject: "OTP authenticate",
-          template: "authenticate",
-          emailData: {
-            otp: otpDetail.otp,
-          },
-        };
+      const subject = getDynamicContent(
+        type == "Email"
+          ? isMailUpdate == true
+            ? "email-updated-subject"
+            : "email-verification-subject"
+          : "forgot-password-subject",
+        null,
+        "emailContent"
+      );
 
-        let otpResponse = await mailSend(mailData);
+      const body = getDynamicContent(
+        type == "Email"
+          ? isMailUpdate == true
+            ? "email-updated-body"
+            : "email-verification-body"
+          : "forgot-password-body",
+        otpData,
+        "emailContent"
+      );
 
-        if (otpResponse) {
-          return responseMsg.successResponse(1, "Success", otpResponse);
-        } else {
-          return responseMsg.validationError(0, "No otp data");
-        }
-      }
+      eventHandler.emit("send-mail", { email, subject, body });
+
+      return responseMsg.successResponse(1, "Otp send successfully", null);
     } catch (error) {
       return responseMsg.serverError(0, "Something went wrong", error.message);
     }

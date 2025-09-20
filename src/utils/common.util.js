@@ -1,3 +1,5 @@
+const constants = require("../constants");
+
 const isEmpty = (value) => {
   if (value === undefined) return true;
 
@@ -26,6 +28,18 @@ const isEmpty = (value) => {
 
 module.exports = {
   isEmpty,
+
+  getDynamicContent: (contentKey, messageData, contentResource) => {
+    const resource = constants[contentResource];
+    console.log({contentResource, resource})
+    let content = resource[contentKey];
+    if (!isEmpty(content) && !isEmpty(messageData)) {
+      for (const key in messageData) {
+        content = content.replaceAll(`[${key}]`, messageData[key]);
+      }
+    }
+    return content;
+  },
 
   createMessage: (name) => {
     return `${name} was created successfully`;

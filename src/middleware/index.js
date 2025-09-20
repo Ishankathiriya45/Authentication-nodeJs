@@ -1,20 +1,16 @@
-const jwt = require("jsonwebtoken");
-const { permission } = require("../utils/constant");
 const { CommonUtil } = require("../utils");
 const { messages } = require("../constants");
 const {
   serverError,
-  badRequest,
   failAuthorization,
   validationError,
   forbidden,
 } = require("../responses/response");
 const { UserService } = require("../service");
-const cryptoUtil = require("../utils/crypto.util");
-const accessSecrateKey =
-  process.env["ACCESS_TOKEN_KEY_" + process.env.RUN_MODE];
-const refreshSecreteKey =
-  process.env["REFRESH_TOKEN_KEY_" + process.env.RUN_MODE];
+const {
+  CryptoUtil: { decryptData },
+  JwtUtil: { verifyToken },
+} = require("../utils");
 const userService = new UserService();
 
 const bearerToken = async (req) => {
@@ -44,7 +40,7 @@ const bearerToken = async (req) => {
 
   try {
     if (token) {
-      const decoded = jwt.verify(token, accessSecrateKey);
+      const decoded = verifyToken(token);
       req.headers.tokenpayload = decoded;
       return {
         valid: true,
@@ -62,13 +58,19 @@ const checkRequest = async (req) => {
   const { requesttoken } = req.headers;
 
   if (!requesttoken) {
-    return false;
+    return {
+      valid: false,
+      message: "Request token not found",
+    };
   }
 
-  const plainText = cryptoUtil.decryptData(requesttoken);
+  const plainText = decryptData(requesttoken);
 
   if (plainText == null) {
-    return false;
+    return {
+      valid: false,
+      message: "Token is invalid",
+    };
   }
 
   const requestText = plainText.trim().toLowerCase();
@@ -78,7 +80,32 @@ const checkRequest = async (req) => {
 
   requestText == encryptionMsg;
 
-  return true;
+  return {
+    valid: true,
+  };
+};
+
+const checkRequestToken = async (req, res, next) => {
+  try {
+    const isRequest = await checkRequest(req);
+    if (isRequest.valid == true) {
+      next();
+    } else {
+      return res
+        .status(500)
+        .send(
+          serverError(
+            0,
+            isRequest.message ? isRequest.message : "Invalid request token",
+            null
+          )
+        );
+    }
+  } catch (error) {
+    return res
+      .status(500)
+      .send(failAuthorization(0, "Invalid request token", null));
+  }
 };
 
 const checkAuth = async (req, res, next, role) => {
@@ -154,6 +181,6 @@ module.exports = {
   checkAuth,
   bikeAuth,
   tokenAuth,
-  checkRequest,
+  checkRequestToken,
   validateSchema,
 };
