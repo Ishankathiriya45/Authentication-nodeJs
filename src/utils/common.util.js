@@ -31,7 +31,6 @@ module.exports = {
 
   getDynamicContent: (contentKey, messageData, contentResource) => {
     const resource = constants[contentResource];
-    console.log({contentResource, resource})
     let content = resource[contentKey];
     if (!isEmpty(content) && !isEmpty(messageData)) {
       for (const key in messageData) {

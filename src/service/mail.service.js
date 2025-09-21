@@ -1,18 +1,23 @@
 const nodemailer = require("nodemailer");
+const {
+  EMAIL_SERVICE_DEV: service,
+  EMAIL_USERNAME_DEV: user,
+  EMAIL_PASSWORD_DEV: password,
+} = process.env;
 
 class EmailService {
   sendMail = async (to, subject, emailData, emailClient = "nodemailer") => {
     if (emailClient == "nodemailer") {
       let transpoter = nodemailer.createTransport({
-        service: process.env["EMAIL_SERVICE_" + process.env.RUN_MODE],
+        service: service,
         auth: {
-          user: process.env["EMAIL_USERNAME_" + process.env.RUN_MODE],
-          pass: process.env["EMAIL_PASSWORD_" + process.env.RUN_MODE],
+          user: user,
+          pass: password,
         },
       });
 
       let mailOptions = {
-        from: process.env["EMAIL_USERNAME_" + process.env.RUN_MODE],
+        from: user,
         to: to,
         subject: subject,
         text: emailData,
